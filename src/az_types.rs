@@ -77,9 +77,6 @@ mod test {
     fn try_from_invalid_input_should_return_correct_output(s1: SafeName, s2: SafeValue) {
         let str = format!("{}{}", &s1.0, &s2.0);
         let result = AzOutputItem::try_from(str);
-        assert!(result.is_err_and(|e| match e {
-            ConversionError::Generic(_) => true,
-            _ => false,
-        }))
+        assert!(result.is_err_and(|e| matches!(e, ConversionError::Generic(_))))
     }
 }
