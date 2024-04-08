@@ -2,7 +2,7 @@
 pub enum ConversionError {
     Fs(std::io::Error),
     Json(serde_json::error::Error),
-    Generic(String)
+    Generic(String),
 }
 
 impl From<std::io::Error> for ConversionError {
