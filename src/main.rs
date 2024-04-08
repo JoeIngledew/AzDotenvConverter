@@ -1,11 +1,14 @@
 use std::{
-    fs::{self, File, OpenOptions},
+    fs::{self, File},
     io::{self, BufRead, Read},
-    path::Path
+    path::Path,
 };
 
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
+
+mod errors;
+use errors::ConversionError;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -39,7 +42,7 @@ impl AzOutputItem {
 }
 
 impl TryFrom<String> for AzOutputItem {
-    type Error = String;
+    type Error = ConversionError;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let equals_ix = value
@@ -60,8 +63,8 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-fn env_to_az(input: &str, output: &str) -> Result<(), String> {
-    let input_lines = read_lines(&String::from(input)).map_err(|_| String::from("Could not read file"))?;
+fn env_to_az(input: &str, output: &str) -> Result<(), ConversionError> {
+    let input_lines = read_lines(&String::from(input))?;
     let mut output_items: Vec<AzOutputItem> = Vec::new();
     let mut errors: Vec<usize> = Vec::new();
     let mut ix: usize = 0;
@@ -76,35 +79,33 @@ fn env_to_az(input: &str, output: &str) -> Result<(), String> {
     }
 
     if !errors.is_empty() {
-        return Err(format!("Failed to parse, errors on lines: {:?}", errors));
+        return Err(ConversionError::Generic(format!(
+            "Failed to parse, errors on lines: {:?}",
+            errors
+        )));
     }
 
-    let new_file_text = serde_json::to_string(&output_items)
-        .map_err(|e| format!("Failed to serialize: {}", e))?;
-    fs::write(output, new_file_text).map_err(|e| format!("Failed to write: {}", e))?;
+    let new_file_text = serde_json::to_string(&output_items)?;
+    fs::write(output, new_file_text)?;
     Ok(())
 }
 
-fn write_output_env_file(path: &Path, content: &Vec<String>) -> Result<(), String> {
-    
-
-    Ok(())
-}
-
-fn az_to_env(input: &str, output: &str) -> Result<(), String> {
+fn az_to_env(input: &str, output: &str) -> Result<(), ConversionError> {
     let path = Path::new(input);
-    let mut file = File::open(&path).map_err(|e| format!("Could not open file {}: {}", input, e))?;
+    let mut file = File::open(path)?;
     let mut file_contents = String::new();
-    file.read_to_string(&mut file_contents).map_err(|e| format!("Could not read to string: {}", e))?;
-    
-    let items: Vec<AzOutputItem> = serde_json::from_str(&file_contents).map_err(|e| format!("failed to deserailize file: {}", e))?;
-    let output_items: Vec<String> = items.iter().map(|x| format!("{}={}", x.name, x.value)).collect();
-    
+    file.read_to_string(&mut file_contents)?;
+
+    let items: Vec<AzOutputItem> = serde_json::from_str(&file_contents)?;
+    let output_items: Vec<String> = items
+        .iter()
+        .map(|x| format!("{}={}", x.name, x.value))
+        .collect();
 
     let output_path = Path::new(output);
-    
+
     let contents = output_items.join("\r\n");
-    fs::write(output_path, contents).map_err(|e| format!("Failed to write file contents: {}", e))?;
+    fs::write(output_path, contents)?;
 
     Ok(())
 }
@@ -122,3 +123,6 @@ fn main() {
         Err(e) => println!("Error: {}", e),
     };
 }
+
+#[cfg(test)]
+mod test {}
