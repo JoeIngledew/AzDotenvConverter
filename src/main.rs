@@ -1,17 +1,13 @@
-use std::{
-    fs::{self, File},
-    io::{self, BufRead, Read},
-    path::Path,
-};
+
 
 use clap::{Parser, Subcommand};
 
 mod az_types;
 mod converters;
 mod errors;
-use az_types::AzOutputItem;
+
 use converters::{az_to_env, env_to_az};
-use errors::ConversionError;
+
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

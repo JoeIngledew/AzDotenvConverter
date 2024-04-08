@@ -38,7 +38,8 @@ impl TryFrom<String> for AzOutputItem {
 mod test {
     use fake::{Fake, StringFaker};
 
-    use crate::{errors::ConversionError, AzOutputItem};
+    use crate::errors::ConversionError;
+    use crate::az_types::AzOutputItem;
 
     #[derive(Debug, Clone)]
     struct SafeName(pub String);
