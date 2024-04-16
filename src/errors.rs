@@ -3,6 +3,7 @@ pub enum ConversionError {
     Fs(std::io::Error),
     Json(serde_json::error::Error),
     Generic(String),
+    WriteError(String),
 }
 
 impl From<std::io::Error> for ConversionError {
@@ -29,6 +30,7 @@ impl std::fmt::Display for ConversionError {
             ConversionError::Fs(e) => write!(f, "[FsError] {}", e),
             ConversionError::Json(e) => write!(f, "[JsonError] {}", e),
             ConversionError::Generic(e) => write!(f, "[GenericError] {}", e),
+            ConversionError::WriteError(e) => write!(f, "[WriteError] {}", e),
         }
     }
 }
